@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Academic Calendar</title>
+  <style>
+    :root {
+      --bg-main: #F0F9FF;
+      --sidebar-bg: #E0F2FE;
+      --primary: #06B6D4;
+      --accent: #22D3EE;
+      --text-dark: #334155;
+      --card-bg: #FFFFFF;
+      --border-color: #BAE6FD;
+      --text-muted: #64748B;
+      --today-bg: #E0F2FE;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-sm: 0 2px 8px rgba(6, 182, 212, 0.08);
+      --shadow-md: 0 4px 16px rgba(6, 182, 212, 0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 30px;
+    }
+
+    header {
+      background: #FFFFFF;
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-container { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      background: var(--primary);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(6, 182, 212, 0.3);
+    }
+    .brand-icon svg { width: 22px; height: 22px; fill: #FFFFFF; }
+    .brand-title { font-size: 1.3rem; font-weight: 800; color: var(--text-dark); letter-spacing: -0.3px; }
+
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #A7F3D0;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      color: #065F46;
+      font-weight: 700;
+    }
+    .status-dot { width: 7px; height: 7px; background: #059669; border-radius: 50%; }
+
+    .btn {
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: #FFFFFF;
+      color: var(--text-dark);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover { background: var(--sidebar-bg); }
+    .btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #FFFFFF;
+      border: none;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+    }
+    .btn-primary:hover {
+      background: #0891B2;
+      box-shadow: 0 6px 16px rgba(6, 182, 212, 0.35);
+    }
+
+    .btn-danger {
+      background: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      color: #991B1B;
+    }
+    .btn-danger:hover { background: #FCA5A5; }
+
+    .main-layout {
+      max-width: 1440px;
+      margin: 24px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 310px 1fr;
+      gap: 24px;
+    }
+
+    .sidebar { display: flex; flex-direction: column; gap: 20px; }
+    .card {
+      background: var(--sidebar-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 0.725rem; font-weight: 700; color: var(--text-dark); text-transform: uppercase; margin-bottom: 6px; }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper svg { position: absolute; left: 12px; width: 16px; height: 16px; fill: var(--text-muted); }
+    .input-wrapper .form-control { padding-left: 36px; }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 0.875rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      outline: none;
+      background: #FFFFFF;
+      color: var(--text-dark);
+      transition: all 0.2s ease;
+    }
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15);
+    }
+
+    .calendar-container {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .calendar-header {
+      padding: 18px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+      background: #FFFFFF;
+    }
+
+    .calendar-nav { display: flex; align-items: center; gap: 8px; }
+    .calendar-title { font-size: 1.35rem; font-weight: 800; color: var(--text-dark); margin: 0 10px; letter-spacing: -0.3px; }
+
+    .view-toggle { display: flex; background: var(--bg-main); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); }
+    .view-toggle button { padding: 6px 16px; font-size: 0.825rem; border: none; background: transparent; cursor: pointer; border-radius: 6px; font-weight: 700; color: var(--text-dark); transition: all 0.2s; }
+    .view-toggle button.active { background: var(--primary); color: #FFFFFF; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3); }
+
+    .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--border-color); gap: 1px; }
+    .day-header { background: #FFFFFF; color: var(--primary); font-weight: 800; font-size: 0.725rem; text-transform: uppercase; text-align: center; padding: 12px 0; letter-spacing: 0.5px; }
+
+    .day-cell {
+      background: #FFFFFF;
+      min-height: 120px;
+      padding: 10px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .day-cell:hover { background: var(--bg-main); }
+    .day-cell.other-month { background: #F8FAFC; opacity: 0.45; }
+    .day-number { font-size: 0.85rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+
+    .day-cell.today { background: #ECFEFF; }
+    .day-cell.today .day-number {
+      background: var(--accent);
+      color: #FFFFFF;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+    }
+
+    .event-chip {
+      background: #CCFBF1;
+      border-left: 4px solid var(--primary);
+      color: #0F766E;
+      font-size: 0.75rem;
+      padding: 5px 8px;
+      margin-bottom: 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: transform 0.1s, background 0.2s;
+    }
+    .event-chip:hover {
+      background: #99F6E4;
+      transform: translateX(2px);
+    }
+    .event-chip svg { width: 14px; height: 14px; fill: #0F766E; flex-shrink: 0; }
+
+    .year-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 24px; background: var(--bg-main); }
+    .mini-month { background: #FFFFFF; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 14px; box-shadow: var(--shadow-sm); }
+    .mini-month-title { font-size: 0.9rem; font-weight: 800; color: var(--primary); margin-bottom: 12px; text-align: center; text-transform: uppercase; }
+    .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; font-size: 0.7rem; }
+    .mini-day-header { font-weight: 800; color: var(--text-muted); padding-bottom: 4px; }
+    .mini-day { padding: 5px 0; border-radius: 4px; cursor: pointer; color: var(--text-dark); transition: all 0.15s; }
+    .mini-day:hover { background: var(--sidebar-bg); }
+    .mini-day.has-events { background: var(--accent); font-weight: 800; color: #FFFFFF; }
+    .mini-day.today { background: var(--primary); color: #FFFFFF; font-weight: 800; }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      width: 100%; max-width: 540px; padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    .modal-title { font-size: 1.15rem; font-weight: 800; color: var(--primary); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .detail-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.85rem; color: var(--text-dark); }
+    .detail-item svg { width: 16px; height: 16px; fill: var(--primary); flex-shrink: 0; }
+
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; max-width: 340px; }
+    .toast {
+      background: #FFFFFF;
+      color: var(--text-dark);
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast svg { width: 18px; height: 18px; fill: var(--primary); flex-shrink: 0; }
+
+    @media (max-width: 1024px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .year-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .year-grid { grid-template-columns: 1fr; }
+      .day-cell { min-height: 85px; padding: 4px; }
+      .form-row { grid-template-columns: 1fr; }
+      .calendar-header { flex-direction: column; align-items: stretch; }
+      .calendar-nav { justify-content: space-between; }
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="brand-container">
+      <div class="brand-icon">
+        <!-- Flaticon Solid Calendar Icon -->
+        <svg viewBox="0 0 24 24"><path d="M19,4H18V2a1,1,0,0,0-2,0V4H8V2A1,1,0,0,0,6,2V4H5A3,3,0,0,0,2,7V19a3,3,0,0,0,3,3H19a3,3,0,0,0,3-3V7A3,3,0,0,0,19,4ZM20,19a1,1,0,0,1-1,1H5a1,1,0,0,1-1-1V10H20Zm0-11H4V7A1,1,0,0,1,5,6H19a1,1,0,0,1,1,1Z"/></svg>
+      </div>
+      <span class="brand-title">Academic Calendar</span>
+    </div>
+    
+    <div class="header-actions">
+      <div class="status-badge">
+        <span class="status-dot"></span> Online Sync
+      </div>
+      <button class="btn" onclick="requestNotificationPermission()">
+        <svg viewBox="0 0 24 24"><path d="M12,2A7,7,0,0,0,5,9v3.88l-1.71,1.71A1,1,0,0,0,3,15.3V17a1,1,0,0,0,1,1H20a1,1,0,0,0,1-1V15.3a1,1,0,0,0-.29-.71L19,12.88V9A7,7,0,0,0,12,2Zm2,18H10a2,2,0,0,0,4,0Z"/></svg> Alerts
+      </button>
+      <button class="btn btn-primary" id="open-new-btn">
+        <svg viewBox="0 0 24 24"><path d="M19,11H13V5a1,1,0,0,0-2,0v6H5a1,1,0,0,0,0,2h6v6a1,1,0,0,0,2,0V13h6a1,1,0,0,0,0-2Z"/></svg> New Activity
+      </button>
+    </div>
+  </header>
+
+  <div class="main-layout">
+    <aside class="sidebar">
+      <div class="card">
+        <div class="card-title">
+          <span>Search & Filters</span>
+          <button class="btn" style="padding: 4px 8px; font-size: 0.75rem;" onclick="resetFilters()">
+            <svg viewBox="0 0 24 24"><path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm0,18a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z"/></svg> Clear
+          </button>
+        </div>
+        
+        <div class="form-group">
+          <label>Keyword Search</label>
+          <div class="input-wrapper">
+            <svg viewBox="0 0 24 24"><path d="M21.71,20.29,18,16.61A9,9,0,1,0,16.61,18l3.68,3.68a1,1,0,0,0,1.42,0A1,1,0,0,0,21.71,20.29ZM11,18a7,7,0,1,1,7-7A7,7,0,0,1,11,18Z"/></svg>
+            <input type="text" id="search-text" class="form-control" placeholder="Filter by title..." oninput="renderViews()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Campus</label>
+          <select id="filter-campus" class="form-control" onchange="renderViews()">
+            <option value="">All Campuses</option>
+            <option value="Main Campus">Main Campus</option>
+            <option value="El Doral Campus">El Doral Campus</option>
+            <option value="Loyola Campus">Loyola Campus</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Program</label>
+          <select id="filter-program" class="form-control" onchange="renderViews()">
+            <option value="">All Programs</option>
+            <option value="Small Wonders">Small Wonders</option>
+            <option value="Children">Children</option>
+            <option value="Teens">Teens</option>
+            <option value="Adults">Adults</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card" id="detail-card">
+        <div class="card-title">Activity Inspection</div>
+        <div id="detail-content" style="font-size: 0.85rem; color: var(--text-muted);">
+          Select an activity card from the calendar view to inspect parameters.
+        </div>
+      </div>
+    </aside>
+
+    <main class="calendar-container">
+      <div class="calendar-header">
+        <div class="calendar-nav">
+          <button class="btn" id="prev-btn">
+            <svg viewBox="0 0 24 24"><path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/></svg>
+          </button>
+          <button class="btn" id="today-btn">Today</button>
+          <button class="btn" id="next-btn">
+            <svg viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+          </button>
+          <h2 class="calendar-title" id="calendar-title-display">September 2026</h2>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div class="view-toggle">
+            <button id="view-month-btn" class="active" onclick="switchView('month')">Month</button>
+            <button id="view-year-btn" onclick="switchView('year')">Year</button>
+          </div>
+          <select id="month-select" class="form-control" style="width: auto;" onchange="changeMonthSelect()"></select>
+          <select id="year-select" class="form-control" style="width: auto;" onchange="changeYearSelect()"></select>
+        </div>
+      </div>
+
+      <div id="month-view" class="month-grid"></div>
+      <div id="year-view" class="year-grid" style="display: none;"></div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="activity-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title-text">New Activity Registration</h3>
+        <button class="btn" onclick="closeModal()" style="padding: 4px 8px;">✕</button>
+      </div>
+      <form id="activity-form">
+        <input type="hidden" id="act-id">
+        
+        <div class="form-group">
+          <label>Activity Title *</label>
+          <input type="text" id="act-name" class="form-control" placeholder="e.g. Faculty Orientation" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" id="act-date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Time</label>
+            <input type="time" id="act-time" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Campus</label>
+            <select id="act-campus" class="form-control">
+              <option value="">Select Campus</option>
+              <option value="Main Campus">Main Campus</option>
+              <option value="El Doral Campus">El Doral Campus</option>
+              <option value="Loyola Campus">Loyola Campus</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Program</label>
+            <select id="act-program" class="form-control">
+              <option value="">Select Program</option>
+              <option value="Small Wonders">Small Wonders</option>
+              <option value="Children">Children</option>
+              <option value="Teens">Teens</option>
+              <option value="Adults">Adults</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cost</label>
+            <input type="text" id="act-cost" class="form-control" placeholder="e.g. Free / $20">
+          </div>
+          <div class="form-group">
+            <label>Materials Required</label>
+            <input type="text" id="act-materials" class="form-control" placeholder="e.g. Workbook Page 12">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="act-desc" class="form-control" rows="3" placeholder="Provide additional details..."></textarea>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="act-notify" style="width: 16px; height: 16px; accent-color: var(--primary);">
+          <label for="act-notify" style="margin: 0; text-transform: none; font-size: 0.85rem; color: var(--text-dark); cursor: pointer;">Enable push reminder for scheduled time</label>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+          <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Activity</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCGQqApmZZA8CVTPn0inq2cjWBrKQmjE9Y",
+      authDomain: "academic-calendar-3b523.firebaseapp.com",
+      databaseURL: "https://academic-calendar-3b523-default-rtdb.firebaseio.com",
+      projectId: "academic-calendar-3b523",
+      storageBucket: "academic-calendar-3b523.firebasestorage.app",
+      messagingSenderId: "392218349579",
+      appId: "1:392218349579:web:6de47c11d909f12103370e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const activitiesRef = db.ref('activities');
+
+    let currentDate = new Date(2026, 8, 1); // September 2026
+    let currentView = 'month';
+    let activities = {};
+
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+    activitiesRef.on('value', (snapshot) => {
+      activities = snapshot.val() || {};
+      renderViews();
+    });
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12,2A10,10,0,1,0,22,12,10.011,10.011,0,0,0,12,2Zm-1,15L6,12l1.414-1.414L11,14.172l6.586-6.586L19,9Z"/></svg><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function requestNotificationPermission() {
+      if (!("Notification" in window)) {
+        showToast("Notifications not supported.");
+        return;
+      }
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") showToast("System notifications active.");
+      });
+    }
+
+    function initSelectors() {
+      const monthSelect = document.getElementById('month-select');
+      const yearSelect = document.getElementById('year-select');
+
+      monthSelect.innerHTML = months.map((m, idx) => `<option value="${idx}">${m}</option>`).join('');
+      
+      let yearsHtml = '';
+      for (let y = 2023; y <= 2030; y++) {
+        yearsHtml += `<option value="${y}">${y}</option>`;
+      }
+      yearSelect.innerHTML = yearsHtml;
+    }
+
+    function updateHeaderControls() {
+      document.getElementById('month-select').value = currentDate.getMonth();
+      document.getElementById('year-select').value = currentDate.getFullYear();
+
+      if (currentView === 'month') {
+        document.getElementById('calendar-title-display').textContent = `${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+        document.getElementById('month-select').style.display = 'inline-block';
+      } else {
+        document.getElementById('calendar-title-display').textContent = `Year ${currentDate.getFullYear()}`;
+        document.getElementById('month-select').style.display = 'none';
+      }
+    }
+
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('view-month-btn').classList.toggle('active', view === 'month');
+      document.getElementById('view-year-btn').classList.toggle('active', view === 'year');
+      
+      document.getElementById('month-view').style.display = view === 'month' ? 'grid' : 'none';
+      document.getElementById('year-view').style.display = view === 'year' ? 'grid' : 'none';
+
+      renderViews();
+    }
+
+    function renderViews() {
+      updateHeaderControls();
+      if (currentView === 'month') renderMonthGrid();
+      else renderYearGrid();
+    }
+
+    function getFilteredActivities() {
+      const text = document.getElementById('search-text').value.toLowerCase();
+      const campus = document.getElementById('filter-campus').value.toLowerCase();
+      const program = document.getElementById('filter-program').value.toLowerCase();
+
+      const filtered = {};
+      Object.keys(activities).forEach(key => {
+        const act = activities[key];
+        const matchText = !text || (act.name && act.name.toLowerCase().includes(text));
+        const matchCampus = !campus || (act.campus && act.campus.toLowerCase().includes(campus));
+        const matchProgram = !program || (act.program && act.program.toLowerCase().includes(program));
+
+        if (matchText && matchCampus && matchProgram) filtered[key] = act;
+      });
+      return filtered;
+    }
+
+    function renderMonthGrid() {
+      const grid = document.getElementById('month-view');
+      grid.innerHTML = '';
+
+      days.forEach(d => {
+        const header = document.createElement('div');
+        header.className = 'day-header';
+        header.textContent = d;
+        grid.appendChild(header);
+      });
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const prevMonthDays = new Date(year, month, 0).getDate();
+
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell other-month';
+        cell.innerHTML = `<div class="day-number">${prevMonthDays - i}</div>`;
+        grid.appendChild(cell);
+      }
+
+      const filteredActs = getFilteredActivities();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+
+        if (day === 22 && month === 8 && year === 2026) {
+          cell.classList.add('today');
+        }
+
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        cell.innerHTML = `<div class="day-number">${day}</div>`;
+
+        Object.keys(filteredActs).forEach(key => {
+          const act = filteredActs[key];
+          if (act.date === dateStr) {
+            const chip = document.createElement('div');
+            chip.className = 'event-chip';
+            
+            // Flaticon Bell SVG
+            const bellIcon = act.notify 
+              ? `<svg viewBox="0 0 24 24"><path d="M12,2A7,7,0,0,0,5,9v3.88l-1.71,1.71A1,1,0,0,0,3,15.3V17a1,1,0,0,0,1,1H20a1,1,0,0,0,1-1V15.3a1,1,0,0,0-.29-.71L19,12.88V9A7,7,0,0,0,12,2Z"/></svg>`
+              : `<svg viewBox="0 0 24 24"><path d="M12,4a5,5,0,0,1,5,5v4a1,1,0,0,0,.29.71L18,14.41V15H6v-.59l.71-.7A1,1,0,0,0,7,13V9A5,5,0,0,1,12,4Z"/></svg>`;
+
+            chip.innerHTML = `${bellIcon}<span>${act.time ? act.time + ' ' : ''}${act.name}</span>`;
+            chip.onclick = (e) => {
+              e.stopPropagation();
+              showDetails(key, act);
+            };
+            cell.appendChild(chip);
+          }
+        });
+
+        cell.onclick = () => openModalForDate(dateStr);
+        grid.appendChild(cell);
+      }
+    }
+
+    function renderYearGrid() {
+      const grid = document.getElementById('year-view');
+      grid.innerHTML = '';
+      const year = currentDate.getFullYear();
+      const filteredActs = getFilteredActivities();
+
+      for (let m = 0; m < 12; m++) {
+        const monthCard = document.createElement('div');
+        monthCard.className = 'mini-month';
+
+        let html = `<div class="mini-month-title">${months[m]}</div>`;
+        html += `<div class="mini-grid">`;
+        ['S','M','T','W','T','F','S'].forEach(d => html += `<div class="mini-day-header">${d}</div>`);
+
+        const firstDay = new Date(year, m, 1).getDay();
+        const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const hasEvents = Object.values(filteredActs).some(a => a.date === dateStr);
+          const isToday = d === 22 && m === 8 && year === 2026;
+
+          let classNames = 'mini-day';
+          if (isToday) classNames += ' today';
+          else if (hasEvents) classNames += ' has-events';
+
+          html += `<div class="${classNames}" onclick="selectDateFromYear('${dateStr}')">${d}</div>`;
+        }
+
+        html += `</div>`;
+        monthCard.innerHTML = html;
+        grid.appendChild(monthCard);
+      }
+    }
+
+    function selectDateFromYear(dateStr) {
+      const parts = dateStr.split('-');
+      currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      switchView('month');
+    }
+
+    function showDetails(id, act) {
+      const content = document.getElementById('detail-content');
+      content.innerHTML = `
+        <div style="font-weight:800; font-size:1.05rem; color:var(--primary); margin-bottom:12px;">${act.name}</div>
+        <div class="detail-item">
+          <svg viewBox="0 0 24 24"><path d="M19,4H18V2a1,1,0,0,0-2,0V4H8V2A1,1,0,0,0,6,2V4H5A3,3,0,0,0,2,7V19a3,3,0,0,0,3,3H19a3,3,0,0,0,3-3V7A3,3,0,0,0,19,4Z"/></svg>
+          <span>${act.date} ${act.time ? 'at ' + act.time : ''}</span>
+        </div>
+        <div class="detail-item">
+          <svg viewBox="0 0 24 24"><path d="M12,2A7,7,0,0,0,5,9c0,5.25,7,13,7,13s7-7.75,7-13A7,7,0,0,0,12,2Zm0,9.5A2.5,2.5,0,1,1,14.5,9,2.5,2.5,0,0,1,12,11.5Z"/></svg>
+          <span>${act.campus || 'N/A'}</span>
+        </div>
+        <div class="detail-item">
+          <svg viewBox="0 0 24 24"><path d="M19,2H5A3,3,0,0,0,2,5V19a3,3,0,0,0,3,3H19a3,3,0,0,0,3-3V5A3,3,0,0,0,19,2ZM18,14H6V12H18Zm0-4H6V8H18Z"/></svg>
+          <span>${act.program || 'N/A'}</span>
+        </div>
+        <div class="detail-item">
+          <svg viewBox="0 0 24 24"><path d="M12,2A10,10,0,1,0,22,12,10,10,0,0,0,12,2Zm1,14H11V11h2Zm0-6H11V8h2Z"/></svg>
+          <span>Cost: ${act.cost || 'Free'}</span>
+        </div>
+        <div style="margin-top:14px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; gap:8px;">
+          <button class="btn" style="flex:1;" onclick="editActivity('${id}')">Edit</button>
+          <button class="btn btn-danger" onclick="deleteActivity('${id}')">Delete</button>
+        </div>
+      `;
+    }
+
+    function openModalForDate(dateStr) {
+      document.getElementById('activity-form').reset();
+      document.getElementById('act-id').value = '';
+      document.getElementById('act-date').value = dateStr || '2026-09-22';
+      document.getElementById('modal-title-text').textContent = 'New Activity Registration';
+      document.getElementById('activity-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('activity-modal').classList.remove('active');
+    }
+
+    function editActivity(id) {
+      const act = activities[id];
+      document.getElementById('act-id').value = id;
+      document.getElementById('act-name').value = act.name || '';
+      document.getElementById('act-date').value = act.date || '';
+      document.getElementById('act-time').value = act.time || '';
+      document.getElementById('act-campus').value = act.campus || '';
+      document.getElementById('act-program').value = act.program || '';
+      document.getElementById('act-cost').value = act.cost || '';
+      document.getElementById('act-materials').value = act.materials || '';
+      document.getElementById('act-desc').value = act.description || '';
+      document.getElementById('act-notify').checked = !!act.notify;
+
+      document.getElementById('modal-title-text').textContent = 'Update Activity Details';
+      document.getElementById('activity-modal').classList.add('active');
+    }
+
+    function deleteActivity(id) {
+      activitiesRef.child(id).remove();
+      document.getElementById('detail-content').innerHTML = 'Select an activity card from the calendar view to inspect parameters.';
+      showToast("Activity deleted.");
+    }
+
+    function resetFilters() {
+      document.getElementById('search-text').value = '';
+      document.getElementById('filter-campus').value = '';
+      document.getElementById('filter-program').value = '';
+      renderViews();
+    }
+
+    document.getElementById('open-new-btn').onclick = () => openModalForDate();
+
+    document.getElementById('activity-form').onsubmit = (e) => {
+      e.preventDefault();
+      const id = document.getElementById('act-id').value;
+      const data = {
+        name: document.getElementById('act-name').value,
+        date: document.getElementById('act-date').value,
+        time: document.getElementById('act-time').value,
+        campus: document.getElementById('act-campus').value,
+        program: document.getElementById('act-program').value,
+        cost: document.getElementById('act-cost').value,
+        materials: document.getElementById('act-materials').value,
+        description: document.getElementById('act-desc').value,
+        notify: document.getElementById('act-notify').checked
+      };
+
+      if (id) {
+        activitiesRef.child(id).update(data);
+        showToast("Activity updated.");
+      } else {
+        activitiesRef.push(data);
+        showToast("Activity created.");
+      }
+
+      closeModal();
+    };
+
+    document.getElementById('prev-btn').onclick = () => {
+      if (currentView === 'month') currentDate.setMonth(currentDate.getMonth() - 1);
+      else currentDate.setFullYear(currentDate.getFullYear() - 1);
+      renderViews();
+    };
+
+    document.getElementById('next-btn').onclick = () => {
+      if (currentView === 'month') currentDate.setMonth(currentDate.getMonth() + 1);
+      else currentDate.setFullYear(currentDate.getFullYear() + 1);
+      renderViews();
+    };
+
+    document.getElementById('today-btn').onclick = () => {
+      currentDate = new Date(2026, 8, 1);
+      renderViews();
+    };
+
+    function changeMonthSelect() {
+      currentDate.setMonth(parseInt(document.getElementById('month-select').value));
+      renderViews();
+    }
+
+    function changeYearSelect() {
+      currentDate.setFullYear(parseInt(document.getElementById('year-select').value));
+      renderViews();
+    }
+
+    initSelectors();
+    renderViews();
+  </script>
+</body>
+</html>
